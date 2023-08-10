@@ -3,7 +3,7 @@ Este repositorio va a mostrar un modelo que utiliza AudioLDM para sonorizar imag
 
 En este repositprio se van a explicar los pasos seguidos para desarrollar este proceso.
 
-## Fase I. Base de datos
+## Fase I. Bases de datos
 
 El primer paso es sacar los embeddings de las distintas bases de datos que se han utlizado para el entrenamiento de los modelos translate. Primero de todo, se comienza a sacar los embeddings de la base de datos que utilizó AudioLDM para su entrenamiento, esta fue Audiocaps. Audiocaps es una base de datos que se encarga de describir en lenguaje natural cualquier tipo de audio en condiciones reales. Esta base de datos consta de 57000 pares de clips de audios y descripciones de texto escrito por humanos.
 
@@ -43,13 +43,16 @@ Para poder reproducir el proceso de sacar los embeddings de las base de datos de
      python csvtotxt.py
      ```
 5.  En este punto ya se tendrán todos los embeddings tanto de CLIP como los correspondientes de CLAP en archivos de texto para cada una de los datos de Adiocaps.
-6.  Si se quieren sacar los histogramas de CLIP o CLAP habrá que cambiar el nombre del csv del archivo histogram.py y ejecutarlo:
-   ```console
-     cd; python histogram.py
-     ```
+
+
+
 Con estos datos se entrenaran 6 modelos de Translate con distintas funciones de coste y de capa intermedia: 256 o 512. Y las funciones de coste son: distancia coseno, error cuadrático medio y constractive learning.
 
-Adicionalmente, como se busca generar audios lo más fieles posible a las imágenes se decide entrenar 12 modelos más, la diferencia de estos modelos es que se van a entrenar 6 modelos primeros cuya base de datos sea la misma que ha utilizado CLIP en su entrenamiento. De esta manera los nuevos modelos Translator van a trabajar con los embeddings directamente de las imágenes y los traducirán en embeddings parecidos a los embeddings de CLAP. Para poder llevar a cabo este proceso se han descargado dos nuevas bases de datos. Por un lado, la base de datos que utiliza CLIP para entrenar, WIT:conjunto de datos de texto de imagen basado en Wikipedia. WIT son datos de texto de imagen basado en Wikipedia, es un conjunto multilingüe multimodal que se compone por 37,6 millones de ejemplos de textos con 11,5 millones de imágenes únicas en 108 idiomas. Este conjunto de datos se creó extrayendo múltiples textos asociados con una imagen de los artículos de Wikipedia y los enlaces de las imágenes de Wikimedia. Es el conjunto de datos más grande que existe hasta la fecha. Se utiliza sobre todo para el preentrenamiento de los modelos multimodales y presenta una alta calidad de alineación entre las imágenes y los textos. Se implementa un script que se encarga de descargar cada una de esas imágenes y sacar los embeddings correspondientes mediante el codificador de CLIP. Asimismo, se codifican las descripciones correspondientes de esas imágenes y con la ayuda del codificador de CLAP. Cada uno de estos embeddings tantos los de CLIP como los de CLAP se guardan en archivos txt. En total, se generan 10.000 archivos con la información de estas imágenes. Como el objetivo es generar la misma cantidad de muestras que las que se obtuvieron con la base de datos Audiocaps, se decide descargar otra base de datos para completar las muestras. El problema de la base de datos de WIT es que muchos de los enlaces ya no estaban disponibles. Además, se busca que el modelo trabaje con las descripciones de los textos en el mismo idioma que las descripciones de Audiocaps, se lleva a cabo un gran filtrado de datos, ya que de la base de datos WIT solo es interesante aquellas descripciones que están escritas en inglés, es decir, las que la columna language es ``uk o en". Como consecuencia, se decide complementar la base de datos con nuevos valores utilizando una nueva base de datos Conceptual Captions. Conceptual Captions es una base de datos que busca mostrar de la forma más fiel posible una descripción de las imágenes. Este recurso conceptual de imágenes presenta más de 3 millones de imágenes, junto con subtítulos en lenguaje natural. Estas imágenes y descripciones se recopilan de la Web y representan una variedad muy ampliada de estilos.
+Adicionalmente, como se busca generar audios lo más fieles posible a las imágenes se decide entrenar 12 modelos más, la diferencia de estos modelos es que se van a entrenar 6 modelos primeros cuya base de datos sea la misma que ha utilizado CLIP en su entrenamiento. De esta manera los nuevos modelos Translator van a trabajar con los embeddings directamente de las imágenes y los traducirán en embeddings parecidos a los embeddings de CLAP. 
+
+Para poder llevar a cabo este proceso se han descargado dos nuevas bases de datos. Por un lado, la base de datos que utiliza CLIP para entrenar, WIT:conjunto de datos de texto de imagen basado en Wikipedia. WIT son datos de texto de imagen basado en Wikipedia, es un conjunto multilingüe multimodal que se compone por 37,6 millones de ejemplos de textos con 11,5 millones de imágenes únicas en 108 idiomas. Este conjunto de datos se creó extrayendo múltiples textos asociados con una imagen de los artículos de Wikipedia y los enlaces de las imágenes de Wikimedia. Es el conjunto de datos más grande que existe hasta la fecha. Se utiliza sobre todo para el preentrenamiento de los modelos multimodales y presenta una alta calidad de alineación entre las imágenes y los textos. 
+
+Se implementa un script que se encarga de descargar cada una de esas imágenes y sacar los embeddings correspondientes mediante el codificador de CLIP. Asimismo, se codifican las descripciones correspondientes de esas imágenes y con la ayuda del codificador de CLAP. Cada uno de estos embeddings tantos los de CLIP como los de CLAP se guardan en archivos txt. Para complmentar los datos descargados, se decide complementar la base de datos con nuevos valores utilizando una nueva base de datos Conceptual Captions. Conceptual Captions es una base de datos de imágenes de más de 3 millones de imágenes, junto con subtítulos en lenguaje natural. Estas imágenes y descripciones se recopilan de la Web y representan una variedad muy ampliada de estilos.
 
 
 Para sacar los embeddings de la base de datos se deben descargar ambas bases de datos: https://github.com/google-research-datasets/wit y https://ai.google.com/research/ConceptualCaptions/ y se siguen los siguientes pasos:
@@ -65,6 +68,8 @@ Para sacar los embeddings de la base de datos se deben descargar ambas bases de 
      python embedding.py
      ```
 3. En este punto se tienen los embeddings de CLIP y CLAP correspondientes en archivos de texto listos para entrenar los modelos translate.
+
+## Translate
 
 
 
