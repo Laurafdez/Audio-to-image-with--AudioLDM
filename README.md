@@ -1,7 +1,11 @@
 # Audio-to-image
 Este repositorio va a mostrar un modelo que utiliza AudioLDM para sonorizar imagenes. Para ello, se ha utilizado el modelo AudioLDM preentrenado para poder generar audios cuando recibe como entrada una imagen. Se han seguido distintos paso para llegar a dicha implementación. AudioLDM es un modelo que es capaz de generar audio a partir de un texto, para poder realizar el proceso cuenta en su implementación con el modelo CLAP. La función principal de CLAP es la de condicionar los audios generados en función de un texto a la entrada o lo que es lo mismo, los embeddings que salen del módulo CLAP son vectores que condicionan la generación de audio por el texto. AudioLDM utiliza el codificador de CLAP para codificicar sus textos. Este hecho se va a aprovechar para desarrollar una red neuronal Traductor que sea capaz de traducir los embeddings de CLIP en embeddings que se parezcan a embeddings de CLAP, controlando este proceso con la ayuda de una función de coste. Se busca traducir los embeddings de CLIP en embeddings de CLAP, los embeddings de las imágenes que codifica CLIP están condicionados por textos y los embeddings de los textos por las imágenes. Como el objetivo de este modelo es generar audio a partir de una imagen resulta conveniente usar CLIP para este proceso. CLIP es modelo multimodal creado por la empresa OpenAI que utiliza el aprendizaje zero shot y utiliza NLP para supervisar el entrenamiento, es decir, es capaz de trabajar con un dato que no ha visto antes solo conociendo su descripción o nombre. CLIP está formado por una red neuronal que ha sido entrenado por una variedad de pares(imagen, texto). Busca que dada una imagen es capaz de encontrar el mejor texto para esa imagen. Una vez que se tenga el modelo Traductor creado, se sustituirá el encoder de texto de AudioLDM por este modelo para conseguir que AudioLDM sea capaz de generar sonido dada una imagen.
 
-En este repositprio se van a explicar los pasos seguidos para desarrollar este proceso.
+<div align="center">
+  <img src="public/TFM/Arquitectura audioldm" width="400" height="400" />
+</div>
+
+En este repositorio se van a explicar los pasos seguidos para desarrollar este proceso.
 
 ## Fase I. Bases de datos
 
@@ -13,10 +17,15 @@ Se realiza el proceso de codificación de cada una de las captions por medio del
 
 En la siguiente imagen se puede observar como los histogramas de CLIP no se encuentran normalizados, este es un dato muy importante porque a la hora de diseñar la red neuronal a de tenerse en cuenta, ya que la entrada del módulo deberá normalizar los valores antes de trabajar con ellos.
 
-
+<div align="center">
+  <img src="public/TFM/CLIPhis.png" width="400" height="400" />
+</div>
 
 Por otro lado, para los embeddings de CLAP, observables en la siguiente imagen, sus normas sí que están normalizadas entre 0 y 1, es decir, en este caso no es necesario que a la salida de la red neuronal se haga un proceso de desnormalización.
 
+<div align="center">
+  <img src="public/TFM/CLAPhis.png" width="400" height="400" />
+</div>
 
 Para poder reproducir el proceso de sacar los embeddings de las base de datos de Audiocaps, es necesario descargarla de la siguiente enlace https://audiocaps.github.io/ y sacar los siguientes pasos:
 
@@ -71,7 +80,14 @@ Para sacar los embeddings de la base de datos se deben descargar ambas bases de 
 
 ## Translate
 
-Una vez construida las base de datos de imagenes y de textos que describen los sonidos, se procede a entrenenar los modelos, en total se contruyen 18 modelos para las distintas bases de datos, dentro de la carpeta TFM se encuentran los archivos Models Audiocaps, models WIT y models con Audiocaps y WIT, con los scripts para implentar los distintos modelos con las distintas bases de datos. De cada tipo se entrenar 6 modelos el único dato que hay que cambiar es la dimensión de la capa oculta de 256 a 512. Se entrenan cada uno de los modelos tomara un rato un ejemplo de como se debe hacer para uno de los modelos:
+Una vez construida las base de datos de imagenes y de textos que describen los sonidos, se procede a entrenenar los modelos, en total se contruyen 18 modelos para las distintas bases de datos, dentro de la carpeta TFM se encuentran los archivos Models Audiocaps, models WIT y models con Audiocaps y WIT, con los scripts para implentar los distintos modelos con las distintas bases de datos. De cada tipo se entrenar 6 modelos el único dato que hay que cambiar es la dimensión de la capa oculta de 256 a 512. La forma de la red neuronal es la siguiente:
+
+<div align="center">
+  <img src="public/TFM/translator.png" width="400" height="400" />
+</div>
+
+
+Se entrenan cada uno de los modelos tomara un rato un ejemplo de como se debe hacer para uno de los modelos:
 
 1. Navigate to where the code is:
    ```console
