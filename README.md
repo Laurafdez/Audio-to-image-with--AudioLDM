@@ -5,7 +5,6 @@ This repository is going to show a model that uses AudioLDM to sound images. For
   <img src="TFM/Arquitectura AudioLDM.png" />
 </div>
 
-This repository will explain the steps followed to develop this process.
 
 ## Data bases
 
@@ -100,14 +99,13 @@ Each of the models will be trained and it will take a while to give an example o
      ```
 3. To train the model with a 512 heat dimension layer, just change that data in the code.
 4. The same is done to train the model whose cost function is the cosine distance:
-  ```console
+   ```console
      python traductorcos.py
      ```
-
 5. And the previous script will be run again, changing the data of the hidden layer to 512.
 6. The same two steps above to train the model whose cost function is Constractive Learning and run:
    ```console
-     python traductorEMC.py
+     python traductorCL.py
      ```
 7.  At this point 6 models trained with the Audiocaps database are obtained. To train the rest of the models with the different databases, all the previous steps must be followed, but entering and executing the scripts found in Models_WIT+Audiocaps and Models_WIT. By executing each of the files and changing the hidden dimension layer from 256 to 512 in each of them, a total of 12 more models are obtained.
 
