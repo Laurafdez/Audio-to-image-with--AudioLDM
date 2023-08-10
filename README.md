@@ -18,10 +18,30 @@ En la siguiente imagen se puede observar como los histogramas de CLIP no se encu
 Por otro lado, para los embeddings de CLAP, observables en la siguiente imagen, sus normas sí que están normalizadas entre 0 y 1, es decir, en este caso no es necesario que a la salida de la red neuronal se haga un proceso de desnormalización.
 
 
-Para poder reproducir el proceso de sacar los embeddings de las base de datos y sacar sus espectrogramas estos son los pasos que hay que seguir:
+Para poder reproducir el proceso de sacar los embeddings de las base de datos de Audiocaps, es necesario descargarla de la siguiente enlace https://audiocaps.github.io/ y sacar los siguientes pasos:
 
 
-
+1. Clone the repository and navigate to where the code is:
+   ```console
+      git clone https://github.com/Laurafdez/Audio-to-image-with--AudioLDM.git
+      ```
+2. Navigate to where the code is:
+   ```console
+     cd /Audio-to-image-with--AudioLDM.git/Prior steps/audiocaps
+      ```
+       
+2. 
+   ```console
+     conda create --name pipeline
+     ```
+3. The created environment is activated:
+   ```console
+     conda activate pipeline
+     ```
+4. Environmental dependencies are installed
+   ```console
+     pip install Flask open-clip torch Pillow diffusers torchvision scipy flask-cors requests soundfile numpy
+     ```
 
 
 
