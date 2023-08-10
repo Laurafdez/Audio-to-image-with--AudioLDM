@@ -27,7 +27,7 @@ Para poder reproducir el proceso de sacar los embeddings de las base de datos de
       ```
 2. Navigate to where the code is:
    ```console
-     cd /Audio-to-image-with--AudioLDM.git/Prior steps/audiocaps
+     cd /Audio-to-image-with--AudioLDM.git/TFM/Prior steps/audiocaps
       ```
        
 2. En los siguientes scripts solo hay que cambiar el csv con el nombre de la base de datos Audiocaps y ejecutar
@@ -60,7 +60,7 @@ Para sacar los embeddings de la base de datos se deben descargar ambas bases de 
 
 1. Navigate to where the code is:
    ```console
-     cd /Audio-to-image-with--AudioLDM.git/Prior steps/WIT
+     cd /Audio-to-image-with--AudioLDM.git/TFM/Prior steps/WIT
       ```
        
 2. En los siguientes scripts solo hay que cambiar el csv con el nombre de la base de datos WIT o Conceptual Captions:
@@ -71,6 +71,48 @@ Para sacar los embeddings de la base de datos se deben descargar ambas bases de 
 
 ## Translate
 
+Una vez construida las base de datos de imagenes y de textos que describen los sonidos, se procede a entrenenar los modelos, en total se contruyen 18 modelos para las distintas bases de datos, dentro de la carpeta TFM se encuentran los archivos Models Audiocaps, models WIT y models con Audiocaps y WIT, con los scripts para implentar los distintos modelos con las distintas bases de datos. De cada tipo se entrenar 6 modelos el único dato que hay que cambiar es la dimensión de la capa oculta de 256 a 512. Se entrenan cada uno de los modelos tomara un rato un ejemplo de como se debe hacer para uno de los modelos:
+
+1. Navigate to where the code is:
+   ```console
+     cd /Audio-to-image-with--AudioLDM.git/TFM/Models_Audiocaps
+      ```
+       
+2. Se entrena la base de datos para el modelo cuya base de datos es Audiocaps, su dimensión de la capa oculta de valor 256 y su función de coste es el error cuadrático medio:
+   ```console
+     python traductorEMC.py
+     ```
+3. Para entrenar el modelo con una capa de dimensión de calor 512 solo hay que cambiar ese dato en el codigo.
+4. Se hace lo mismo para entrenar el modelo cuya función de coste es la distancia coseno:
+
+5. Y se volverá a ejecutar el script anterior cmabiando el dato de la capa oculta a 512
+6. Lo mismos dos pasos anteriores para entrenar el modelo cuya función de coste es Constractive Learning y se ejecuta:
+   ```console
+     python traductorEMC.py
+     ```
+7.  En este punto se obtienen 6 modelos entrenados con la base de datos de Audiocaps para entrenar el resto de modelos con las distintas bases de datos hay que seguir todos los pasos anteriores pero entrando y ejecutando los scripts que se encuentran dentro de Models_WIT+Audiocaps y Models_WIT. Ejecutando cada uno de los archivos y cambiando en cada uno de ellos la capa de dimension oculta de 256 a 512 se obtienen en total 12 modelos más.
+
+## Implementación dentro de AudioLDM
+
+Una vez, obtenido los modelos entrenados, se procede a introducir la arquitectura creada dentro del modelo AudioLDM. Primero de todo se descargó el código que se encuentra subido en el repositorio de AudioLDM https://github.com/haoheliu/AudioLDM, al que se le hizo todas las modificaciones para que pudiera recibir una imagen como entrada. Como se buscaba que el modelo fuera capaz de funcionar cuando recibiera una entrada de texto o una entrada de imagen. Para poder hacer este proceso se implementan los métodos siguiendo la misma metodología para cuando recibe un texto o una imagen. Ahora se le permite a la función que reciba la url de la imagen para que el modelo la descargue de Internet y lleve a cabo el proceso de generación de audio.
+
+Una vez que se permite que el código pueda recibir un enlace con la foto en vez de la descripción de la imagen, se adapta al código para que pueda trabajar con ese caso. Se procede a hacer todos los cambios pertinentes para que la nueva implementación se pueda llevar a cabo. El cambio más importante se da cuando el código llama al módulo CLAP para realizar la codificación del texto ahora en vez de llamar a ese módulo se llama a una nueva clase implementada.
+
+En esa nueva clase implementada es donde va el flujo cuando el código sacaba el embedding del texto, ahora irá a esta clase donde el modelo translate hará el proceso de traducción. Primero, se descargará la imagen del url proporcionado, después se sacará el embedding usando el modelo CLIP. El siguiente paso es sacar los embeddings parecidos a CLAP por medio del modelo translate. Una vez, obtenidos esos embeddings se devuelve al flujo ese vector y AudioLDM continua con su proceso hasta generar audio con ese nuevo embedding. Finalmente, se consigue generar audio a través de una imagen como entrada realizando estos cambios. Que el valor de los errores sea tan pequeño tiene sentido dado que al estar normalizados, al elevarlos al cuadrado los números van a ser cada vez más pequeños.
+
+Para llevar a cabo este proceso:
+
+1. Navigate to where the code is:
+   ```console
+     cd /Audio-to-image-with--AudioLDM.git/AudioLDMv1/audioldm
+      ``` 
+2. Para poder generar audio con alguno de los modelos entrenados es necesario ir al archivoo image_to_audio y escribir el nombre del modelo que se busca generar audio y escribir el tamaño de las capas del modelo.
+
+3. Una vez realizada esta modificación se ejecuta el script:
+   ```console
+     python audioldm -t [URL imagen]
+      ``` 
+4. Pasados unos minutos en la carpte output se encontrará creado el audio para esa imagen.
 
 
 
