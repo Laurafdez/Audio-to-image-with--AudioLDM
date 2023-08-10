@@ -1,33 +1,33 @@
 # Audio-to-image
-Este repositorio va a mostrar un modelo que utiliza AudioLDM para sonorizar imagenes. Para ello, se ha utilizado el modelo AudioLDM preentrenado para poder generar audios cuando recibe como entrada una imagen. Se han seguido distintos paso para llegar a dicha implementación. AudioLDM es un modelo que es capaz de generar audio a partir de un texto, para poder realizar el proceso cuenta en su implementación con el modelo CLAP. La función principal de CLAP es la de condicionar los audios generados en función de un texto a la entrada o lo que es lo mismo, los embeddings que salen del módulo CLAP son vectores que condicionan la generación de audio por el texto. AudioLDM utiliza el codificador de CLAP para codificicar sus textos. Este hecho se va a aprovechar para desarrollar una red neuronal Traductor que sea capaz de traducir los embeddings de CLIP en embeddings que se parezcan a embeddings de CLAP, controlando este proceso con la ayuda de una función de coste. Se busca traducir los embeddings de CLIP en embeddings de CLAP, los embeddings de las imágenes que codifica CLIP están condicionados por textos y los embeddings de los textos por las imágenes. Como el objetivo de este modelo es generar audio a partir de una imagen resulta conveniente usar CLIP para este proceso. CLIP es modelo multimodal creado por la empresa OpenAI que utiliza el aprendizaje zero shot y utiliza NLP para supervisar el entrenamiento, es decir, es capaz de trabajar con un dato que no ha visto antes solo conociendo su descripción o nombre. CLIP está formado por una red neuronal que ha sido entrenado por una variedad de pares(imagen, texto). Busca que dada una imagen es capaz de encontrar el mejor texto para esa imagen. Una vez que se tenga el modelo Traductor creado, se sustituirá el encoder de texto de AudioLDM por este modelo para conseguir que AudioLDM sea capaz de generar sonido dada una imagen.
+This repository is going to show a model that uses AudioLDM to sound images. For this, the AudioLDM model has been pre-trained to be able to generate audio when it receives an image as input. Several steps have been followed to reach this implementation. AudioLDM is a model that is able to generate audio from a text, to be able to carry out the process it counts on the CLAP model in its implementation. The main function of CLAP is to condition the audio generated based on a text input or, in other words, the embeddings that come out of the CLAP module are vectors that condition the audio generation based on the text. AudioLDM uses the CLAP encoder to encode its texts. This fact will be used to develop a Translator neural network capable of translating CLIP embeddings into embeddings that resemble CLAP embeddings, controlling this process with the help of a cost function. The aim is to translate CLIP embeddings into CLAP embeddings, the embeddings of the images encoded by CLIP are conditioned by texts and the embeddings of the texts by the images. As the objective of this model is to generate audio from an image, it is convenient to use CLIP for this process. CLIP is a multimodal model created by the company OpenAI that uses zero-shot learning and uses NLP to supervise the training, i.e. it is able to work with a piece of data that it has not seen before just by knowing its description or name. CLIP consists of a neural network that has been trained on a variety of pairs (image, text). It finds that given an image it is able to find the best text for that image. Once the Translator model has been created, the AudioLDM text encoder will be replaced by this model to make AudioLDM able to generate sound given an image.
 
 <div align="center">
-  <img src="TFM/Arquitectura AudioLDM.png" width="400" height="400" />
+  <img src="TFM/Arquitectura AudioLDM.png" />
 </div>
 
-En este repositorio se van a explicar los pasos seguidos para desarrollar este proceso.
+This repository will explain the steps followed to develop this process.
 
-## Fase I. Bases de datos
+## Data bases
 
-El primer paso es sacar los embeddings de las distintas bases de datos que se han utlizado para el entrenamiento de los modelos translate. Primero de todo, se comienza a sacar los embeddings de la base de datos que utilizó AudioLDM para su entrenamiento, esta fue Audiocaps. Audiocaps es una base de datos que se encarga de describir en lenguaje natural cualquier tipo de audio en condiciones reales. Esta base de datos consta de 57000 pares de clips de audios y descripciones de texto escrito por humanos.
+The first step is to extract the embeddings from the different databases that have been used to train the translate models. First of all, we start by extracting the embeddings from the database that AudioLDM used for its training, which was Audiocaps. Audiocaps is a database that is in charge of describing in natural language any kind of audio in real conditions. This database consists of 57000 pairs of audio clips and text descriptions written by humans.
 
-La columna que es importante para la implementación de la red neuronal es la de captions, ya que en ella se encuentran las descripciones de los sonidos. Una vez descargada toda la base de datos se procede a obtener los embeddings de la columna captions tanto por el codificador de CLIP como por el codificador de CLAP, ya que lo que se busca es desarrollar un modelo que sea capaz de traducir unos embeddings en otros.
+The column that is important for the implementation of the neural network is the captions column, as it contains the descriptions of the sounds. Once the entire database has been downloaded, the embeddings of the captions column are obtained by both the CLIP encoder and the CLAP encoder, since the aim is to develop a model that is capable of translating some embeddings into others.
 
-Se realiza el proceso de codificación de cada una de las captions por medio del codificador de texto de CLIP y de CLAP. Se genera un archivo de texto en el que se recogen los embeddings de CLIP y de CLAP para una misma descripción de textos. Estos embeddings son vectores de 1x512. Es importante conocer si los valores se encuentran normalizados o no, por ello, se sacan los histogramas de las normas de ambos embeddings.
+The encoding process of each of the captions is carried out by means of the CLIP and CLAP text encoder. A text file is generated in which the CLIP and CLAP embeddings for the same text description are collected. These embeddings are 1x512 vectors. It is important to know whether the values are normalised or not, so the histograms of the norms of both embeddings are extracted.
 
-En la siguiente imagen se puede observar como los histogramas de CLIP no se encuentran normalizados, este es un dato muy importante porque a la hora de diseñar la red neuronal a de tenerse en cuenta, ya que la entrada del módulo deberá normalizar los valores antes de trabajar con ellos.
+In the following image it can be seen how the CLIP histograms are not normalised, this is a very important fact because it must be taken into account when designing the neural network, since the module input must normalise the values before working with them.
 
 <div align="center">
-  <img src="TFM/CLIPhis.png" width="400" height="400" />
+  <img src="TFM/CLIPhis.png" width="300" height="250"  />
 </div>
 
-Por otro lado, para los embeddings de CLAP, observables en la siguiente imagen, sus normas sí que están normalizadas entre 0 y 1, es decir, en este caso no es necesario que a la salida de la red neuronal se haga un proceso de desnormalización.
+On the other hand, for the CLAP embeddings, which can be seen in the following image, their norms are normalised between 0 and 1, i.e., in this case it is not necessary to perform a denormalisation process at the output of the neural network.
 
 <div align="center">
-  <img src="TFM/CLAPhis.png" width="400" height="400" />
+  <img src="TFM/CLAPhis.png" width="300" height="250" />
 </div>
 
-Para poder reproducir el proceso de sacar los embeddings de las base de datos de Audiocaps, es necesario descargarla de la siguiente enlace https://audiocaps.github.io/ y sacar los siguientes pasos:
+In order to reproduce the process of extracting the embeddings from the Audiocaps database, it is necessary to download it from the following link https://audiocaps.github.io/ y sacar los siguientes pasos:
 
 
 1. Clone the repository and navigate to where the code is:
@@ -39,32 +39,32 @@ Para poder reproducir el proceso de sacar los embeddings de las base de datos de
      cd /Audio-to-image-with--AudioLDM.git/TFM/Prior steps/audiocaps
       ```
        
-2. En los siguientes scripts solo hay que cambiar el csv con el nombre de la base de datos Audiocaps y ejecutar
+2. In the following scripts just change the csv with the name of the Audiocaps database and execute:
    ```console
      python embedding_CLIP.py
      ```
-3. Y para sacar los embeddings de CLAP:
+3. And to get the CLAP embeddings:
    ```console
      python embedding_CLAP.py
      ```
-4. Se habrán creado dos csv con los embeddings de CLIP y CLAP, para crear archivos de textos con esa información de ejecuta el siguiente script:
+4. Two csv's will have been created with the CLIP and CLAP embeddings, to create text files with this information run the following script:
    ```console
      python csvtotxt.py
      ```
-5.  En este punto ya se tendrán todos los embeddings tanto de CLIP como los correspondientes de CLAP en archivos de texto para cada una de los datos de Adiocaps.
+5.  At this point you will have all the CLIP and CLAP embeddings in text files for each of the Adiocaps data.
 
 
 
-Con estos datos se entrenaran 6 modelos de Translate con distintas funciones de coste y de capa intermedia: 256 o 512. Y las funciones de coste son: distancia coseno, error cuadrático medio y constractive learning.
+With these data, 6 models of Translate will be trained with different cost and intermediate layer functions: 256 or 512. And the cost functions are: cosine distance, mean square error and constractive learning.
 
-Adicionalmente, como se busca generar audios lo más fieles posible a las imágenes se decide entrenar 12 modelos más, la diferencia de estos modelos es que se van a entrenar 6 modelos primeros cuya base de datos sea la misma que ha utilizado CLIP en su entrenamiento. De esta manera los nuevos modelos Translator van a trabajar con los embeddings directamente de las imágenes y los traducirán en embeddings parecidos a los embeddings de CLAP. 
+In addition, as the aim is to generate audios that are as faithful as possible to the images, it was decided to train 12 more models, the difference between these models is that 6 models will be trained first, whose database is the same as the one used by CLIP in its training. In this way the new Translator models will work with the embeddings directly from the images and will translate them into embeddings similar to the CLAP embeddings. 
 
-Para poder llevar a cabo este proceso se han descargado dos nuevas bases de datos. Por un lado, la base de datos que utiliza CLIP para entrenar, WIT:conjunto de datos de texto de imagen basado en Wikipedia. WIT son datos de texto de imagen basado en Wikipedia, es un conjunto multilingüe multimodal que se compone por 37,6 millones de ejemplos de textos con 11,5 millones de imágenes únicas en 108 idiomas. Este conjunto de datos se creó extrayendo múltiples textos asociados con una imagen de los artículos de Wikipedia y los enlaces de las imágenes de Wikimedia. Es el conjunto de datos más grande que existe hasta la fecha. Se utiliza sobre todo para el preentrenamiento de los modelos multimodales y presenta una alta calidad de alineación entre las imágenes y los textos. 
+In order to carry out this process, two new databases have been downloaded. On the one hand, the database that CLIP uses for training, WIT: Wikipedia-based image text dataset. WIT is a Wikipedia-based image text dataset, a multilingual multimodal dataset consisting of 37.6 million text examples with 11.5 million unique images in 108 languages. This dataset was created by extracting multiple texts associated with an image from Wikipedia articles and links from Wikimedia images. It is the largest dataset in existence to date. It is mainly used for pre-training of multimodal models and features high quality alignment between images and texts. 
 
-Se implementa un script que se encarga de descargar cada una de esas imágenes y sacar los embeddings correspondientes mediante el codificador de CLIP. Asimismo, se codifican las descripciones correspondientes de esas imágenes y con la ayuda del codificador de CLAP. Cada uno de estos embeddings tantos los de CLIP como los de CLAP se guardan en archivos txt. Para complmentar los datos descargados, se decide complementar la base de datos con nuevos valores utilizando una nueva base de datos Conceptual Captions. Conceptual Captions es una base de datos de imágenes de más de 3 millones de imágenes, junto con subtítulos en lenguaje natural. Estas imágenes y descripciones se recopilan de la Web y representan una variedad muy ampliada de estilos.
+A script is implemented to download each of these images and extract the corresponding embeddings using the CLIP encoder. Likewise, the corresponding descriptions of these images are encoded with the help of the CLAP encoder. Each of these embeddings, both CLIP and CLAP, are saved in txt files. To complement the downloaded data, it was decided to supplement the database with new values using a new Conceptual Captions database. Conceptual Captions is an image database of more than 3 million images, together with natural language captions. These images and descriptions are collected from the Web and represent a very wide variety of styles.
 
 
-Para sacar los embeddings de la base de datos se deben descargar ambas bases de datos: https://github.com/google-research-datasets/wit y https://ai.google.com/research/ConceptualCaptions/ y se siguen los siguientes pasos:
+To extract the embeddings from the database, download both databases: https://github.com/google-research-datasets/wit and https://ai.google.com/research/ConceptualCaptions/ and follow the steps below:
 
 
 1. Navigate to where the code is:
@@ -72,63 +72,66 @@ Para sacar los embeddings de la base de datos se deben descargar ambas bases de 
      cd /Audio-to-image-with--AudioLDM.git/TFM/Prior steps/WIT
       ```
        
-2. En los siguientes scripts solo hay que cambiar el csv con el nombre de la base de datos WIT o Conceptual Captions:
+2. In the following scripts just change the csv with the name of the WIT or Conceptual Captions database:
    ```console
      python embedding.py
      ```
-3. En este punto se tienen los embeddings de CLIP y CLAP correspondientes en archivos de texto listos para entrenar los modelos translate.
+3. At this point you have the corresponding CLIP and CLAP embeddings in text files ready to train the translate models.
 
 ## Translate
 
-Una vez construida las base de datos de imagenes y de textos que describen los sonidos, se procede a entrenenar los modelos, en total se contruyen 18 modelos para las distintas bases de datos, dentro de la carpeta TFM se encuentran los archivos Models Audiocaps, models WIT y models con Audiocaps y WIT, con los scripts para implentar los distintos modelos con las distintas bases de datos. De cada tipo se entrenar 6 modelos el único dato que hay que cambiar es la dimensión de la capa oculta de 256 a 512. La forma de la red neuronal es la siguiente:
+Once the database of images and texts describing the sounds has been built, we proceed to train the models, in total 18 models are built for the different databases, inside the TFM folder we find the files Models Audiocaps, models WIT and models with Audiocaps and WIT, with the scripts to implement the different models with the different databases. Of each type, 6 models are trained, the only data to be changed is the dimension of the hidden layer from 256 to 512. The shape of the neural network is as follows:
 
 <div align="center">
-  <img src="TFM/translator.png" width="400" height="400" />
+  <img src="TFM/translator.png" width="460" height="350" />
 </div>
 
 
-Se entrenan cada uno de los modelos tomara un rato un ejemplo de como se debe hacer para uno de los modelos:
+Each of the models will be trained and it will take a while to give an example of how it should be done for one of the models:
 
 1. Navigate to where the code is:
    ```console
      cd /Audio-to-image-with--AudioLDM.git/TFM/Models_Audiocaps
       ```
        
-2. Se entrena la base de datos para el modelo cuya base de datos es Audiocaps, su dimensión de la capa oculta de valor 256 y su función de coste es el error cuadrático medio:
+2. The database is trained for the model whose database is Audiocaps, its hidden layer dimension of value 256 and its cost function is the mean square error:
    ```console
      python traductorEMC.py
      ```
-3. Para entrenar el modelo con una capa de dimensión de calor 512 solo hay que cambiar ese dato en el codigo.
-4. Se hace lo mismo para entrenar el modelo cuya función de coste es la distancia coseno:
+3. To train the model with a 512 heat dimension layer, just change that data in the code.
+4. The same is done to train the model whose cost function is the cosine distance:
+  ```console
+     python traductorcos.py
+     ```
 
-5. Y se volverá a ejecutar el script anterior cmabiando el dato de la capa oculta a 512
-6. Lo mismos dos pasos anteriores para entrenar el modelo cuya función de coste es Constractive Learning y se ejecuta:
+5. And the previous script will be run again, changing the data of the hidden layer to 512.
+6. The same two steps above to train the model whose cost function is Constractive Learning and run:
    ```console
      python traductorEMC.py
      ```
-7.  En este punto se obtienen 6 modelos entrenados con la base de datos de Audiocaps para entrenar el resto de modelos con las distintas bases de datos hay que seguir todos los pasos anteriores pero entrando y ejecutando los scripts que se encuentran dentro de Models_WIT+Audiocaps y Models_WIT. Ejecutando cada uno de los archivos y cambiando en cada uno de ellos la capa de dimension oculta de 256 a 512 se obtienen en total 12 modelos más.
+7.  At this point 6 models trained with the Audiocaps database are obtained. To train the rest of the models with the different databases, all the previous steps must be followed, but entering and executing the scripts found in Models_WIT+Audiocaps and Models_WIT. By executing each of the files and changing the hidden dimension layer from 256 to 512 in each of them, a total of 12 more models are obtained.
 
-## Implementación dentro de AudioLDM
+## Implementation within AudioLDM
 
-Una vez, obtenido los modelos entrenados, se procede a introducir la arquitectura creada dentro del modelo AudioLDM. Primero de todo se descargó el código que se encuentra subido en el repositorio de AudioLDM https://github.com/haoheliu/AudioLDM, al que se le hizo todas las modificaciones para que pudiera recibir una imagen como entrada. Como se buscaba que el modelo fuera capaz de funcionar cuando recibiera una entrada de texto o una entrada de imagen. Para poder hacer este proceso se implementan los métodos siguiendo la misma metodología para cuando recibe un texto o una imagen. Ahora se le permite a la función que reciba la url de la imagen para que el modelo la descargue de Internet y lleve a cabo el proceso de generación de audio.
+Once the trained models were obtained, we proceeded to introduce the architecture created within the AudioLDM model. First of all, the code was downloaded from the AudioLDM repository https://github.com/haoheliu/AudioLDM, to which all the modifications were made so that it could receive an image as input. As we wanted the model to be able to work when receiving a text input or an image input. In order to be able to do this process, the methods are implemented following the same methodology for when it receives a text or an image. Now the function is allowed to receive the url of the image so that the model can download it from the Internet and carry out the audio generation process.
 
-Una vez que se permite que el código pueda recibir un enlace con la foto en vez de la descripción de la imagen, se adapta al código para que pueda trabajar con ese caso. Se procede a hacer todos los cambios pertinentes para que la nueva implementación se pueda llevar a cabo. El cambio más importante se da cuando el código llama al módulo CLAP para realizar la codificación del texto ahora en vez de llamar a ese módulo se llama a una nueva clase implementada.
+Once the code is allowed to receive a link with the photo instead of the image description, the code is adapted to work with that case. All the relevant changes are made so that the new implementation can be carried out. The most important change occurs when the code calls the CLAP module to perform the text encoding, now instead of calling that module it calls a new implemented class.
 
-En esa nueva clase implementada es donde va el flujo cuando el código sacaba el embedding del texto, ahora irá a esta clase donde el modelo translate hará el proceso de traducción. Primero, se descargará la imagen del url proporcionado, después se sacará el embedding usando el modelo CLIP. El siguiente paso es sacar los embeddings parecidos a CLAP por medio del modelo translate. Una vez, obtenidos esos embeddings se devuelve al flujo ese vector y AudioLDM continua con su proceso hasta generar audio con ese nuevo embedding. Finalmente, se consigue generar audio a través de una imagen como entrada realizando estos cambios. Que el valor de los errores sea tan pequeño tiene sentido dado que al estar normalizados, al elevarlos al cuadrado los números van a ser cada vez más pequeños.
+In this new implemented class is where the flow goes when the code was pulling the embedding from the text, now it will go to this class where the translate model will do the translation process. First, the image will be downloaded from the url provided, then the embedding will be extracted using the CLIP model. The next step is to get the CLAP-like embeddings using the translate model. Once the embeddings are obtained, the vector is returned to the stream and AudioLDM continues its process until audio is generated with the new embedding. Finally, audio is generated through an image as input by making these changes. The fact that the value of the errors is so small makes sense given that, as they are normalised, when squared, the numbers will become smaller and smaller.
 
-Para llevar a cabo este proceso:
+In order to carry out this process:
 
 1. Navigate to where the code is:
    ```console
      cd /Audio-to-image-with--AudioLDM.git/AudioLDMv1/audioldm
       ``` 
-2. Para poder generar audio con alguno de los modelos entrenados es necesario ir al archivoo image_to_audio y escribir el nombre del modelo que se busca generar audio y escribir el tamaño de las capas del modelo.
+2. In order to generate audio with one of the trained models it is necessary to go to the file image_to_audio and write the name of the model you want to generate audio and write the size of the layers of the model.
 
-3. Una vez realizada esta modificación se ejecuta el script:
+3. Once this modification has been made, the script is executed:
    ```console
      python audioldm -t [URL imagen]
       ``` 
-4. Pasados unos minutos en la carpte output se encontrará creado el audio para esa imagen.
+4. After a few minutes in the output folder, the audio for this image will be created.
 
 
 
