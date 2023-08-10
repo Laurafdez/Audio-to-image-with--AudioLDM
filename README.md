@@ -82,7 +82,7 @@ To extract the embeddings from the database, download both databases: https://gi
 Once the database of images and texts describing the sounds has been built, we proceed to train the models, in total 18 models are built for the different databases, inside the TFM folder we find the files Models Audiocaps, models WIT and models with Audiocaps and WIT, with the scripts to implement the different models with the different databases. Of each type, 6 models are trained, the only data to be changed is the dimension of the hidden layer from 256 to 512. The shape of the neural network is as follows:
 
 <div align="center">
-  <img src="TFM/translator.png" width="475" height="350" />
+  <img src="TFM/translator.png" width="500" height="350" />
 </div>
 
 
